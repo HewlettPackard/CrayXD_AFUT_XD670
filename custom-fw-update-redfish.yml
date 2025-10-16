@@ -1,6 +1,6 @@
 - name: Automating redfish configuration
   hosts: xds
-  # connection: local
+  connection: local
   gather_facts: no
   vars: 
     bmc_username: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=hsys-secrets/data/torch/ipmi:username', auth_method='jwt', mount_point='kubernetes', role_id='aap', jwt=jwt) }}"
