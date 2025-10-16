@@ -28,6 +28,7 @@
         jwt: "{{ cicd.resources[0].data.token | b64decode }}"
       no_log: "{{ log_debug | default(true) }}"
       become: false
+      delegate_to: localhost
   tasks:
     - name: Get all firmware versions via Redfish
       block:
