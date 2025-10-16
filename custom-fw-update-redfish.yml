@@ -33,7 +33,7 @@
 
     - name: Get all firmware versions via Redfish
       block:
-        - name:
+        - name: Get firmware versions
           ansible.builtin.uri:
             url: "https://{{ ansible_host }}/redfish/v1/UpdateService/FirmwareInventory/{{ item }}"
             method: GET
@@ -59,8 +59,6 @@
             - HGX_FW_GPU_SXM_6
             - HGX_FW_GPU_SXM_7
             - HGX_FW_GPU_SXM_8
-          loop_control:
-            label: "{{ item }}"
           register: inv_specific
           failed_when: false
 
