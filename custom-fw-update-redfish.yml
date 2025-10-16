@@ -10,7 +10,7 @@
     bmc_fw: "software/hpe/xd670/2025.08.00/XD670_BMC_v1.22_signed.bin.hpm"
     # cpld_fw: "software/hpe/xd670/2025.08.00/"
     web_int: "files-webserver.hpc-infra.svc.cluster.local:8080"
-  pre_tasks:
+  tasks:
     - name: Get token
       kubernetes.core.k8s_info:
         api_version: v1
@@ -26,7 +26,6 @@
         jwt: "{{ cicd.resources[0].data.token | b64decode }}"
       no_log: "{{ log_debug | default(true) }}"
       become: false
-  tasks:
     - name: Get redfish username from vault
       ansible.builtin.set_fact:
         username: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=hsys-secrets/data/torch/ipmi:username', auth_method='jwt', mount_point='kubernetes', role_id='aap', jwt=jwt) }}"
