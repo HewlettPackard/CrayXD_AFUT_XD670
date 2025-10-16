@@ -3,8 +3,8 @@
   connection: local
   gather_facts: no
   vars: 
-    username: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=hsys-secrets/data/torch/ipmi:username', auth_method='jwt', mount_point='kubernetes', role_id='aap', jwt=jwt) }}"
-    password: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=hsys-secrets/data/torch/ipmi:password', auth_method='jwt', mount_point='kubernetes', role_id='aap', jwt=jwt) }}"
+    bmc_username: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=hsys-secrets/data/torch/ipmi:username', auth_method='jwt', mount_point='kubernetes', role_id='aap', jwt=jwt) }}"
+    bmc_password: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=hsys-secrets/data/torch/ipmi:password', auth_method='jwt', mount_point='kubernetes', role_id='aap', jwt=jwt) }}"
     ansible_hashi_vault_url: 'https://vault.hpc.nyu.edu'
     ansible_hashi_vault_validate_certs: false
     baseuri: "{{ ansible_host }}"
@@ -12,7 +12,7 @@
     bmc_fw: "software/hpe/xd670/2025.08.00/XD670_BMC_v1.22_signed.bin.hpm"
     # cpld_fw: "software/hpe/xd670/2025.08.00/"
     web_int: "files-webserver.hpc-infra.svc.cluster.local:8080"
-  tasks:
+  pre_tasks:
     - name: Get token
       kubernetes.core.k8s_info:
         api_version: v1
@@ -28,14 +28,15 @@
         jwt: "{{ cicd.resources[0].data.token | b64decode }}"
       no_log: "{{ log_debug | default(true) }}"
       become: false
+  tasks:
     - name: Get all firmware versions via Redfish
       block:
         - name:
           ansible.builtin.uri:
             url: "https://{{ ansible_host }}/redfish/v1/UpdateService/FirmwareInventory/{{ item }}"
             method: GET
-            user: "{{ username }}"
-            password: "{{ password }}"
+            user: "{{ bmc_username }}"
+            password: "{{ bmc_password }}"
             force_basic_auth: true
             validate_certs: false
             return_content: true
@@ -89,8 +90,8 @@
       ansible.builtin.uri:
         url: "https://{{ ansible_host }}/redfish/v1/UpdateService/Actions/SimpleUpdate"
         method: POST
-        user: "{{ username }}"
-        password: "{{ password }}"
+        user: "{{ bmc_username }}"
+        password: "{{ bmc_password }}"
         force_basic_auth: true
         validate_certs: false
         headers:
@@ -105,8 +106,8 @@
       ansible.builtin.uri:
         url: "https://{{ ansible_host }}/redfish/v1/UpdateService/Actions/SimpleUpdate"
         method: POST
-        user: "{{ username }}"
-        password: "{{ password }}"
+        user: "{{ bmc_username }}"
+        password: "{{ bmc_password }}"
         force_basic_auth: true
         validate_certs: false
         headers:
