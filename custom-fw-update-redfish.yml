@@ -3,6 +3,8 @@
   connection: local
   gather_facts: no
   vars: 
+    username: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=hsys-secrets/data/torch/ipmi:username', auth_method='jwt', mount_point='kubernetes', role_id='aap', jwt=jwt) }}"
+    password: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=hsys-secrets/data/torch/ipmi:password', auth_method='jwt', mount_point='kubernetes', role_id='aap', jwt=jwt) }}"
     ansible_hashi_vault_url: 'https://vault.hpc.nyu.edu'
     ansible_hashi_vault_validate_certs: false
     baseuri: "{{ ansible_host }}"
@@ -26,14 +28,6 @@
         jwt: "{{ cicd.resources[0].data.token | b64decode }}"
       no_log: "{{ log_debug | default(true) }}"
       become: false
-    - name: Get redfish username from vault
-      ansible.builtin.set_fact:
-        username: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=hsys-secrets/data/torch/ipmi:username', auth_method='jwt', mount_point='kubernetes', role_id='aap', jwt=jwt) }}"
-      no_log: "{{ log_debug | default(true) }}"
-    - name: Get redfish password from vault
-      ansible.builtin.set_fact:
-        password: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=hsys-secrets/data/torch/ipmi:password', auth_method='jwt', mount_point='kubernetes', role_id='aap', jwt=jwt) }}"
-      no_log: "{{ log_debug | default(true) }}"
     - name: Get all firmware versions via Redfish
       block:
         - name:
