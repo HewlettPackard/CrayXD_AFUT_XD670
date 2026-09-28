@@ -63,11 +63,14 @@ class CrayRedfishUtils(RedfishUtils):
             return False
 
     def get_model(self):
+        self.last_model_error = None
         try:
             response = self.get_request(self.root_uri + "/redfish/v1/Systems/Self")
             if response['ret'] is False:
+                self.last_model_error = response.get('msg', 'BMC did not respond to Redfish request')
                 return "NA"
-        except:
+        except Exception as e:
+            self.last_model_error = "BMC unreachable: %s" % str(e)
             return "NA"
         model="NA"
         try:
@@ -77,6 +80,7 @@ class CrayRedfishUtils(RedfishUtils):
             if 'Model' in response:
                 model = response[u'Model'].strip()
             else:
+                self.last_model_error = "Model field not present in Systems/Self response"
                 return "NA"
         if model not in partial_models and "XD" in model:
             split_model_array = model.split() #["HPE", "Cray", "XD665"]
@@ -146,6 +150,9 @@ class CrayRedfishUtils(RedfishUtils):
             else:
                 return {'ret': False, 'changed': True, 'msg': 'Must specify the correct required option for power_state in config.ini'}
 
+        elif model=="NA":
+            reason = getattr(self, 'last_model_error', None) or "BMC unreachable or Model field not returned"
+            lis=[IP,model,"unreachable: %s" % reason]
         else:
             lis=[IP,model,"unsupported_model"]
         new_data=",".join(lis)
@@ -216,7 +223,8 @@ class CrayRedfishUtils(RedfishUtils):
         entry=[]
         entry.append(IP)
         if model=="NA":
-            entry.append("unreachable/unsupported_system") #unreachable or not having model field correctly, i.e not even a XD system
+            reason = getattr(self, 'last_model_error', None) or "unreachable or not having model field correctly, i.e not even a XD system"
+            entry.append("unreachable/unsupported_system: %s" % reason)
             for target in GPU_targets:
                 entry.append("NA")
         elif partial_models[model.upper()] not in supported_models: #might be a Cray XD like XD685 which is not yet supported
@@ -247,7 +255,8 @@ class CrayRedfishUtils(RedfishUtils):
         entry=[]
         entry.append(IP)
         if model=="NA":
-            entry.append("unreachable/unsupported_system") #unreachable or not having model field correctly, i.e not even a XD system
+            reason = getattr(self, 'last_model_error', None) or "unreachable or not having model field correctly, i.e not even a XD system"
+            entry.append("unreachable/unsupported_system: %s" % reason)
             for target in XD670_targets:
                 entry.append("NA")
         elif partial_models[model.upper()] not in supported_models: #might be a Cray XD like XD685 which is not yet supported
